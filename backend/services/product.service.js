@@ -1,5 +1,3 @@
-import Product from '../models/product.model.js';
-
 /**
  * Product catalog domain service.
  * Handles pricing/discount calculation, catalog filtering, and pagination.
@@ -49,6 +47,7 @@ export const buildProductFilter = ({ search, category, minPrice, maxPrice, statu
 };
 
 export const queryProducts = async (queryParams) => {
+  const Product = (await import('../models/product.model.js')).default;
   const pageNum = Math.max(1, Number(queryParams.page) || 1);
   const limitNum = Math.min(100, Math.max(1, Number(queryParams.limit) || 10));
   const filter = buildProductFilter(queryParams);
