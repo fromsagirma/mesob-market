@@ -5,6 +5,7 @@ import crypto from "crypto";
 import User from "../models/user.model.js"
 import dotenv from 'dotenv';
 import { getCookieOptions, getClearCookieOptions } from '../config/cookie.js';
+import { validatePasswordComplexity } from '../utils/passwordValidator.js';
 
 dotenv.config();
 
@@ -90,6 +91,11 @@ export const register = async (req, res) => {
     try {
         if (!name || !email || !password) {
             return res.status(400).json({ message: "All fields are required" });
+        }
+
+        const passwordValidation = validatePasswordComplexity(password);
+        if (!passwordValidation.isValid) {
+            return res.status(400).json({ message: passwordValidation.message });
         }
 
         const existingUser = await User.findOne({ email: normalizedEmail });
@@ -288,6 +294,12 @@ export const confirmPasswordReset = async (req, res) => {
     const { token, newPassword } = req.body;
     try {
         if (!token || !newPassword) return res.status(400).json({ message: 'Token and new password required' });
+
+        const passwordValidation = validatePasswordComplexity(newPassword);
+        if (!passwordValidation.isValid) {
+            return res.status(400).json({ message: passwordValidation.message });
+        }
+
         const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
         const user = await User.findOne({ passwordResetToken: tokenHash, passwordResetExpires: { $gt: Date.now() } });
         if (!user) return res.status(400).json({ message: 'Invalid or expired token' });
@@ -312,6 +324,11 @@ export const changePassword = async (req, res) => {
     try {
         if (!oldPassword || !newPassword) {
             return res.status(400).json({ message: "Old and new passwords are required" });
+        }
+
+        const passwordValidation = validatePasswordComplexity(newPassword);
+        if (!passwordValidation.isValid) {
+            return res.status(400).json({ message: passwordValidation.message });
         }
 
         const user = await User.findById(userId).select("+password"); 
