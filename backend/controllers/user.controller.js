@@ -1,75 +1,14 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import nodemailer from "nodemailer";
 import crypto from "crypto";
 import User from "../models/user.model.js"
 import dotenv from 'dotenv';
 import { getCookieOptions, getClearCookieOptions } from '../config/cookie.js';
 import { validatePasswordComplexity } from '../utils/passwordValidator.js';
 import { generateAccessToken, generateRefreshTokenString, hashToken } from '../services/auth.service.js';
+import { sendVerificationEmail, sendPasswordResetEmail } from '../services/email.service.js';
 
 dotenv.config();
-
-
-const sendVerificationEmail = async (email, token) => {
-    const transporter = nodemailer.createTransport({
-        service: 'Gmail',
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS 
-        }
-    });
-
-    const serverUrl = process.env.SERVER_URL || `https://e-commerce-he4h.onrender.com`;
-    const verificationLink = `${serverUrl}/api/auth/verify?token=${token}`;
-
-    const mailOptions = {
-        from: `"CSEC_E_COMMERCE" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: "Verify your email address",
-        html: `
-            <div style="font-family: sans-serif; padding: 20px;">
-                <h1>Welcome!</h1>
-                <p>Thank you for signing up. Please verify your email to activate your account:</p>
-                <a href="${verificationLink}" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a>
-                <p style="margin-top: 20px;">If the button doesn't work, copy and paste this link:</p>
-                <p>${verificationLink}</p>
-            </div>
-        `,
-    };
-
-    await transporter.sendMail(mailOptions);
-};
-
-const sendPasswordResetEmail = async (email, token) => {
-    const transporter = nodemailer.createTransport({
-        service: 'Gmail',
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS 
-        }
-    });
-
-    const frontendUrl = process.env.FRONTEND_URL || `http://localhost:${process.env.FRONTEND_PORT || 5173}`;
-    const resetLink = `${frontendUrl}/reset-password?token=${token}`;
-
-    const mailOptions = {
-        from: `"CSEC_E-COMMERCE" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: "Password reset",
-        html: `
-            <div style="font-family: sans-serif; padding: 20px;">
-                <h1>Password reset request</h1>
-                <p>Click to reset your password:</p>
-                <a href="${resetLink}" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset password</a>
-                <p>If the button doesn't work, paste this link:</p>
-                <p>${resetLink}</p>
-            </div>
-        `,
-    };
-
-    await transporter.sendMail(mailOptions);
-};
 
 
 export const register = async (req, res) => {
