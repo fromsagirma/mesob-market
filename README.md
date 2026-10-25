@@ -142,6 +142,48 @@ Key route groups:
 
 ---
 
+## 🧪 Automated Testing
+
+Mesob Market includes comprehensive unit and integration test suites:
+
+```bash
+# Run all workspace test suites
+npm test
+
+# Run backend test suite (unit + integration)
+npm run test:backend
+
+# Run frontend test suite (state + calculations + components)
+npm run test:frontend
+```
+
+---
+
+## 🐳 Containerization & Docker Compose
+
+Run the entire full-stack platform (MongoDB, Backend, Nginx Frontend) with one command:
+
+```bash
+# Production stack
+docker compose up --build
+
+# Development stack with live hot-reloading
+docker compose -f docker-compose.dev.yml up --build
+```
+
+---
+
+## 📚 Architecture & Documentation
+
+- [Architecture Decision Records (ADRs)](docs/adr/)
+- [Postman / Thunder Client API Collection](docs/mesob_market_postman_collection.json)
+- [Contributing Guidelines](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Security Policy](SECURITY.md)
+- [Changelog](CHANGELOG.md)
+
+---
+
 ## 🛡️ Security & Publishing Notes
 - Sensitive credentials must strictly remain in `.env` and must never be committed to source control.
 - Ensure production database connections enforce strict TLS certificate validation.
