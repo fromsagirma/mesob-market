@@ -1,0 +1,263 @@
+{
+  "info": {
+    "_postman_id": "a984b2c1-mesob-4a3d-92d1-e6129845cd12",
+    "name": "Mesob Market API Collection",
+    "description": "Comprehensive API collection for Mesob Market Ethiopian E-Commerce Platform. Supports Postman, Insomnia, and Thunder Client.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "System & Health",
+      "item": [
+        {
+          "name": "Root Welcome",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            }
+          }
+        },
+        {
+          "name": "Service Readiness & Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Abebe Bikila\",\n  \"email\": \"abebe@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"abebe@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Access Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "List Catalog Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products?page=1&limit=12&category=Traditional%20Attire",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "12" },
+                { "key": "category", "value": "Traditional Attire" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Product Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/products/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "products", ":id"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Get User Cart",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/cart",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "cart"]
+            }
+          }
+        },
+        {
+          "name": "Sync Cart Items",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product\": \"60d5ec49f1b2c8b1f8e4e1a1\",\n      \"quantity\": 2,\n      \"price\": 4500\n    }\n  ],\n  \"totalPrice\": 9000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/cart",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "cart"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders & Payments",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"product\": \"60d5ec49f1b2c8b1f8e4e1a1\",\n      \"quantity\": 1,\n      \"price\": 4500\n    }\n  ],\n  \"shippingAddress\": {\n    \"address\": \"Bole Road\",\n    \"city\": \"Addis Ababa\",\n    \"postalCode\": \"1000\",\n    \"country\": \"Ethiopia\"\n  },\n  \"paymentMethod\": \"chapa\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "orders"]
+            }
+          }
+        },
+        {
+          "name": "Initialize Chapa Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"4500\",\n  \"currency\": \"ETB\",\n  \"email\": \"abebe@example.com\",\n  \"first_name\": \"Abebe\",\n  \"last_name\": \"Bikila\",\n  \"order_id\": \"order-id-here\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/pay",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pay"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Curator (RAG)",
+      "item": [
+        {
+          "name": "Query RAG Shopping Assistant",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prompt\": \"I am looking for traditional wedding attire and specialty coffee from Yirgacheffe.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/rag/ask",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "rag", "ask"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
