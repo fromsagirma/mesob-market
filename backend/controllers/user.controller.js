@@ -4,6 +4,7 @@ import nodemailer from "nodemailer";
 import crypto from "crypto";
 import User from "../models/user.model.js"
 import dotenv from 'dotenv';
+import { getCookieOptions, getClearCookieOptions } from '../config/cookie.js';
 
 dotenv.config();
 
@@ -188,12 +189,7 @@ export const login = async (req, res) => {
 
         const { password: _, ...userData } = user._doc;
 
-        const cookieOptions = {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 7 * 24 * 60 * 60 * 1000 
-        };
+        const cookieOptions = getCookieOptions();
         try { res.cookie('refreshToken', refreshToken, cookieOptions); } catch (e) {}
 
         res.status(200).json({
@@ -222,12 +218,7 @@ export const refreshToken = async (req, res) => {
         user.refreshTokenHash = crypto.createHash('sha256').update(newRefreshToken).digest('hex');
         await user.save();
 
-        const cookieOptions = {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        };
+        const cookieOptions = getCookieOptions();
         try { res.cookie('refreshToken', newRefreshToken, cookieOptions); } catch (e) {}
 
         res.json({ accessToken, refreshToken: newRefreshToken });
@@ -248,7 +239,7 @@ export const logout = async (req, res) => {
                 await user.save();
             }
         }
-        try { res.clearCookie('refreshToken'); } catch (e) {}
+        try { res.clearCookie('refreshToken', getClearCookieOptions()); } catch (e) {}
         res.json({ message: 'Logged out' });
     } catch (err) {
         console.error('Logout Error:', err);
