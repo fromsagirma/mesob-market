@@ -23,6 +23,7 @@ import dashboardAdminRoutes from "./routes/admin/dashboard.route.js";
 import financeAdminRoutes from "./routes/admin/finance.route.js";
 import ragRoutes from "./routes/rag.route.js";
 import communityRoutes from "./routes/communityPost.route.js";
+import healthRoutes from "./routes/health.route.js";
 
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
@@ -80,6 +81,7 @@ app.use("/api/admin/dashboard", dashboardAdminRoutes);
 app.use("/api/admin/finance", financeAdminRoutes);
 app.use("/api/rag", ragRoutes);
 app.use("/api/community", communityRoutes);
+app.use("/api/health", healthRoutes);
 
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));

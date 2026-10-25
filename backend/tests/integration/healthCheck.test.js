@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import '../setup.js';
 import { securityHeaders } from '../../middleware/security.middleware.js';
 import { requestIdMiddleware } from '../../middleware/requestId.middleware.js';
+import { getDatabaseStatus, buildHealthPayload } from '../../routes/health.route.js';
 
 describe('Server Health and Security Baseline Integration', () => {
   const createMockHttp = (incomingHeaders = {}) => {
@@ -84,5 +85,30 @@ describe('Server Health and Security Baseline Integration', () => {
 
     assert.strictEqual(res.statusCode, 200);
     assert.match(res.body, /Server is running/);
+  });
+
+  it('should correctly format database connectivity statuses', () => {
+    assert.strictEqual(getDatabaseStatus(1).status, 'connected');
+    assert.strictEqual(getDatabaseStatus(1).healthy, true);
+
+    assert.strictEqual(getDatabaseStatus(0).status, 'disconnected');
+    assert.strictEqual(getDatabaseStatus(0).healthy, false);
+
+    assert.strictEqual(getDatabaseStatus(2).status, 'connecting');
+    assert.strictEqual(getDatabaseStatus(3).status, 'disconnecting');
+  });
+
+  it('should build comprehensive health check payload with memory and uptime metrics', () => {
+    const payload = buildHealthPayload({
+      dbReadyState: 1,
+      uptime: 3600,
+      memory: { rss: 104857600, heapUsed: 52428800, heapTotal: 62914560 }
+    });
+
+    assert.strictEqual(payload.status, 'healthy');
+    assert.strictEqual(payload.database.status, 'connected');
+    assert.strictEqual(payload.uptimeSeconds, 3600);
+    assert.strictEqual(payload.memory.rssMb, 100);
+    assert.strictEqual(payload.memory.heapUsedMb, 50);
   });
 });
