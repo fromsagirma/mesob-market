@@ -174,10 +174,26 @@ export const login = async (req, res) => {
             return res.status(403).json({ message: "Your account has been banned due to multiple reports." });
         }
 
+        if (user.lockUntil && user.lockUntil > Date.now()) {
+            const minutesLeft = Math.ceil((user.lockUntil - Date.now()) / (60 * 1000));
+            return res.status(429).json({
+                message: `Account temporarily locked due to too many failed login attempts. Please try again in ${minutesLeft} minute(s).`
+            });
+        }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
+            user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+            if (user.failedLoginAttempts >= 5) {
+                user.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
+            }
+            await user.save();
             return res.status(400).json({ message: "Invalid email or password" });
+        }
+
+        if (user.failedLoginAttempts > 0 || user.lockUntil) {
+            user.failedLoginAttempts = 0;
+            user.lockUntil = undefined;
         }
 
         const accessToken = generateAccessToken(user);
