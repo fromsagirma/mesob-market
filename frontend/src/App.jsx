@@ -11,6 +11,7 @@ import ToastContainer from './components/Common/ToastContainer'
 import useThemeStore from './store/themeStore'
 import { useProductStore } from './store/productStore'
 import useCartStore from './store/cartStore'
+import ErrorBoundary from './components/Common/ErrorBoundary'
 
 import Home from './pages/home'
 import InstallPWAButton from './components/InstallPWAButton'
@@ -110,13 +111,12 @@ const App = () => {
   }, [])
 
   return (
-
-    <>
+    <ErrorBoundary>
       <ToastContainer />
       <UserChangePassword />
       <AppRoutes />
       <Toaster position="bottom-right" reverseOrder={false} />
-    </>
+    </ErrorBoundary>
   )
 
 }
