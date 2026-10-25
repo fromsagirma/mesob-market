@@ -37,6 +37,7 @@ import UserChangePassword from './components/UserChangePassword'
 import { useModalStore } from './store/modalStore'
 import AdminLayout from './components/Admin/AdminLayout'
 import CommunityPage from './pages/CommunityPage'
+import NotFoundPage from './pages/NotFoundPage'
 
 
 function AppRoutes() {
@@ -78,6 +79,7 @@ function AppRoutes() {
           <Route path="edit-product/:id" element={<AddProduct />} />
           <Route path="product-preview" element={<ProductPreview />} />
         </Route>
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       {!hideMainChrome && <Footer />}
       {!hideMainChrome && <BottomNav />}
