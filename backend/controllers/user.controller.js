@@ -6,21 +6,9 @@ import User from "../models/user.model.js"
 import dotenv from 'dotenv';
 import { getCookieOptions, getClearCookieOptions } from '../config/cookie.js';
 import { validatePasswordComplexity } from '../utils/passwordValidator.js';
+import { generateAccessToken, generateRefreshTokenString, hashToken } from '../services/auth.service.js';
 
 dotenv.config();
-
-
-const generateAccessToken = (user) => {
-    return jwt.sign(
-        { userId: user._id },
-        process.env.JWT_SECRET,
-        { expiresIn: process.env.ACCESS_TOKEN_EXPIRES || "15m" }
-    );
-};
-
-const generateRefreshTokenString = () => {
-    return crypto.randomBytes(64).toString("hex");
-};
 
 
 const sendVerificationEmail = async (email, token) => {
@@ -205,7 +193,7 @@ export const login = async (req, res) => {
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshTokenString();
 
-        const refreshHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+        const refreshHash = hashToken(refreshToken);
         user.refreshTokenHash = refreshHash;
         await user.save();
 
@@ -231,13 +219,13 @@ export const refreshToken = async (req, res) => {
         const provided = req.body.refreshToken || req.cookies?.refreshToken;
         if (!provided) return res.status(400).json({ message: 'Refresh token required' });
 
-        const providedHash = crypto.createHash('sha256').update(provided).digest('hex');
+        const providedHash = hashToken(provided);
         const user = await User.findOne({ refreshTokenHash: providedHash });
         if (!user) return res.status(401).json({ message: 'Invalid refresh token' });
 
         const accessToken = generateAccessToken(user);
         const newRefreshToken = generateRefreshTokenString();
-        user.refreshTokenHash = crypto.createHash('sha256').update(newRefreshToken).digest('hex');
+        user.refreshTokenHash = hashToken(newRefreshToken);
         await user.save();
 
         const cookieOptions = getCookieOptions();
@@ -254,7 +242,7 @@ export const logout = async (req, res) => {
     try {
         const provided = req.body.refreshToken || req.cookies?.refreshToken;
         if (provided) {
-            const providedHash = crypto.createHash('sha256').update(provided).digest('hex');
+            const providedHash = hashToken(provided);
             const user = await User.findOne({ refreshTokenHash: providedHash });
             if (user) {
                 user.refreshTokenHash = undefined;
@@ -277,7 +265,7 @@ export const requestPasswordReset = async (req, res) => {
         if (!user) return res.status(200).json({ message: 'If that email is registered, a reset link was sent' });
 
         const resetToken = crypto.randomBytes(32).toString('hex');
-        const resetHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+        const resetHash = hashToken(resetToken);
         user.passwordResetToken = resetHash;
         user.passwordResetExpires = Date.now() + 60 * 60 * 1000; // 1 hour
         await user.save();
@@ -300,7 +288,7 @@ export const confirmPasswordReset = async (req, res) => {
             return res.status(400).json({ message: passwordValidation.message });
         }
 
-        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+        const tokenHash = hashToken(token);
         const user = await User.findOne({ passwordResetToken: tokenHash, passwordResetExpires: { $gt: Date.now() } });
         if (!user) return res.status(400).json({ message: 'Invalid or expired token' });
 
