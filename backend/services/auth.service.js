@@ -1,4 +1,3 @@
-import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 
 /**
@@ -6,7 +5,18 @@ import crypto from 'crypto';
  * Handles token generation, hashing, and signature verification.
  */
 
+let jwt = null;
+try {
+  jwt = (await import('jsonwebtoken')).default;
+} catch {
+  // Gracefully fallback when jsonwebtoken npm package is not installed (e.g. unit tests)
+  jwt = null;
+}
+
 export const generateAccessToken = (user) => {
+  if (!jwt) {
+    throw new Error('JWT library not loaded');
+  }
   return jwt.sign(
     { userId: user._id },
     process.env.JWT_SECRET,
@@ -23,6 +33,9 @@ export const hashToken = (token) => {
 };
 
 export const verifyAccessToken = (token) => {
+  if (!jwt) {
+    throw new Error('JWT library not loaded');
+  }
   return jwt.verify(token, process.env.JWT_SECRET);
 };
 
