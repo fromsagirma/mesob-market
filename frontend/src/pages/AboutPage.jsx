@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 const STATS_DATA = [
   { value: '10K+', label: 'Customers' },
@@ -176,6 +177,7 @@ const CTASection = () => (
 );
 
 const AboutPage = () => {
+  useDocumentTitle('About Us — Craftsmanship & Culture');
   return (
     <main className="min-h-screen text-foreground font-sans bg-background selection:bg-primary/20">
       <HeroSection />
