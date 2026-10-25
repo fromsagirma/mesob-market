@@ -4,45 +4,12 @@ import User from '../models/user.model.js';
 import Cart from '../models/cart.model.js';
 import crypto from 'crypto';
 import axios from 'axios';
-
-const SUCCESS_PAYMENT_STATUSES = new Set(['success', 'successful', 'paid', 'completed', 'complete']);
-const FAILED_PAYMENT_STATUSES = new Set(['failed', 'cancelled', 'canceled', 'error', 'expired']);
-
-const normalizeStatus = (value) => String(value || '').trim().toLowerCase();
-
-const parseMonetaryValue = (value) => {
-    if (typeof value === 'number') {
-        return Number.isFinite(value) ? value : 0;
-    }
-
-    if (typeof value === 'string') {
-        const normalized = value.replace(/[^0-9.-]/g, '');
-        const parsed = Number(normalized);
-        return Number.isFinite(parsed) ? parsed : 0;
-    }
-
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : 0;
-};
-
-const resolvePaymentStatus = (payload) => {
-    const apiStatus = normalizeStatus(payload?.status);
-    const paymentStatus = normalizeStatus(payload?.data?.status);
-    const resolved = paymentStatus || apiStatus;
-
-    if (SUCCESS_PAYMENT_STATUSES.has(resolved)) return 'success';
-    if (FAILED_PAYMENT_STATUSES.has(resolved)) return 'failed';
-    return 'pending';
-};
-
-const clearUserCartAfterPayment = async (userId) => {
-    if (!userId) return;
-    await Cart.findOneAndUpdate(
-        { user: userId },
-        { items: [], totalPrice: 0 },
-        { new: true }
-    );
-};
+import {
+    parseMonetaryValue,
+    resolvePaymentStatus,
+    verifyWebhookSignature,
+    clearUserCartAfterPayment
+} from '../services/payment.service.js';
 
 const initializePayment = async (req, res) => {
     try {
@@ -204,11 +171,13 @@ const verifyPayment = async (req, res) => {
 }
 
 const webhookHandler = async (req, res) => {
-    const hash = crypto.createHmac('sha256', process.env.CHAPA_SECRET_KEY)
-        .update(JSON.stringify(req.body))
-        .digest('hex');
+    const isValid = verifyWebhookSignature(
+        req.body,
+        req.headers['x-chapa-signature'],
+        process.env.CHAPA_SECRET_KEY
+    );
 
-    if (hash !== req.headers['x-chapa-signature']) {
+    if (!isValid) {
         return res.status(400).json({ message: "Invalid signature" });
     }
 
