@@ -8,9 +8,14 @@ const run = async () => {
   try {
     await connectDB();
 
-    const email = process.env.ADMIN_EMAIL || 'admin@csec.com';
-    const password = process.env.ADMIN_PASS || 'admin1234';
+    const email = process.env.ADMIN_EMAIL;
+    const password = process.env.ADMIN_PASS;
     const name = process.env.ADMIN_NAME || 'Administrator';
+
+    if (!email || !password) {
+      console.error('Error: Please provide ADMIN_EMAIL and ADMIN_PASS environment variables.');
+      process.exit(1);
+    }
 
     let user = await User.findOne({ email: String(email).toLowerCase().trim() });
 
