@@ -6,6 +6,7 @@ import OrderSummary from '../components/carts/OrderSummary';
 import useCartStore from '../store/cartStore';
 import { apiRequest } from '../lib/apiClient';
 import { useAuthStore } from '../store/authStore';
+import { calculateOrderSummary } from '../lib/orderSummary.js';
 
 const CartPage = () => {
     const { cart, getCart, updateQuantity, removeFromCart } = useCartStore();
@@ -62,13 +63,11 @@ const CartPage = () => {
         removeFromCart(productId);
     };
 
-    const subtotal = typeof cart?.totalPrice === 'number' && cart.totalPrice > 0 
+    const rawSubtotal = typeof cart?.totalPrice === 'number' && cart.totalPrice > 0 
         ? cart.totalPrice 
         : cartItems.reduce((acc, item) => acc + ((item.price || 0) * (item.quantity || 1)), 0);
         
-    const taxRate = 0.08; 
-    const tax = subtotal * taxRate;
-    const total = subtotal + tax;
+    const { subtotal, tax, grandTotal: total } = calculateOrderSummary({ subtotal: rawSubtotal });
 
     return (
         <div className="font-sans antialiased bg-background text-foreground min-h-screen pb-20">
