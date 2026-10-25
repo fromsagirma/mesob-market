@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { formatPageTitle, BRAND_FULL_TITLE } from '../lib/brand.js';
 
 /**
  * Custom hook to manage document head title dynamically.
@@ -6,15 +7,14 @@ import { useEffect } from 'react';
  */
 export const useDocumentTitle = (title, preserveOnUnmount = false) => {
   useEffect(() => {
-    const defaultTitle = 'Mesob Market — Ethiopian E-Commerce Platform';
-    const formattedTitle = title ? `${title} | Mesob Market` : defaultTitle;
+    const formattedTitle = formatPageTitle(title);
     const previousTitle = document.title;
 
     document.title = formattedTitle;
 
     return () => {
       if (!preserveOnUnmount) {
-        document.title = previousTitle || defaultTitle;
+        document.title = previousTitle || BRAND_FULL_TITLE;
       }
     };
   }, [title, preserveOnUnmount]);
