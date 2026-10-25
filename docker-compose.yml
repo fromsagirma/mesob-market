@@ -1,0 +1,60 @@
+services:
+  mongodb:
+    image: mongo:7-jammy
+    container_name: mesob-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: mesob_market
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - mesob-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mesob-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGO_URI: mongodb://mongodb:27017/mesob_market
+      FRONTEND_URL: http://localhost
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - mesob-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:5000
+    container_name: mesob-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - mesob-network
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  mesob-network:
+    driver: bridge
