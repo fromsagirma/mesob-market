@@ -1,70 +1,13 @@
 import mongoose from "mongoose";
 import Product from "../models/product.model.js";
 import Review from "../models/review.model.js";
-import Order from "../models/order.model.js";
+import {
+  serializeReview,
+  checkPurchaseVerification,
+  updateProductRatingStats
+} from "../services/review.service.js";
 
 const isValidObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
-
-const formatDate = (value) => {
-  if (!value) return "";
-  return new Date(value).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-};
-
-const toReviewResponse = (reviewDoc) => {
-  const review = reviewDoc.toObject ? reviewDoc.toObject() : reviewDoc;
-  const authorName = review.userId?.name || "Anonymous";
-
-  return {
-    _id: review._id,
-    productKey: review.productKey,
-    productId: review.productId,
-    userId: review.userId?._id || review.userId,
-    rating: review.rating,
-    title: review.title,
-    content: review.comment,
-    verified: Boolean(review.verifiedPurchase),
-    author: authorName,
-    date: formatDate(review.createdAt),
-    createdAt: review.createdAt,
-    updatedAt: review.updatedAt,
-  };
-};
-
-const updateProductRatingStats = async ({ productKey, productId }) => {
-  const stats = await Review.aggregate([
-    {
-      $match: {
-        productKey,
-      },
-    },
-    {
-      $group: {
-        _id: "$productId",
-        averageRating: { $avg: "$rating" },
-        reviewCount: { $sum: 1 },
-      },
-    },
-  ]);
-
-  const averageRating = stats[0]?.averageRating || 0;
-  const reviewCount = stats[0]?.reviewCount || 0;
-
-  if (productId) {
-    await Product.findByIdAndUpdate(productId, {
-      averageRating: Number(averageRating.toFixed(1)),
-      reviewCount,
-    });
-  }
-
-  return {
-    averageRating: Number(averageRating.toFixed(1)),
-    reviewCount,
-  };
-};
 
 export const getProductReviews = async (req, res) => {
   try {
@@ -78,7 +21,7 @@ export const getProductReviews = async (req, res) => {
       .populate("userId", "name")
       .sort({ createdAt: -1 });
 
-    const normalizedReviews = reviews.map(toReviewResponse);
+    const normalizedReviews = reviews.map(serializeReview);
 
     const fallbackSummary = reviews.reduce(
       (acc, item) => {
@@ -117,13 +60,7 @@ export const getReviewEligibility = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const hasVerifiedPurchase = isValidObjectId(id)
-      ? await Order.exists({
-          userId: user._id,
-          paymentStatus: "paid",
-          "items.productId": id,
-        })
-      : false;
+    const hasVerifiedPurchase = await checkPurchaseVerification(user._id, id);
 
     return res.status(200).json({
       canReview: Boolean(hasVerifiedPurchase),
@@ -157,13 +94,7 @@ export const upsertProductReview = async (req, res) => {
     const trimmedTitle = typeof title === "string" ? title.trim() : "";
     const trimmedContent = content.trim();
 
-    const hasVerifiedPurchase = isValidObjectId(id)
-      ? await Order.exists({
-          userId: user._id,
-          paymentStatus: "paid",
-          "items.productId": id,
-        })
-      : false;
+    const hasVerifiedPurchase = await checkPurchaseVerification(user._id, id);
 
     if (!hasVerifiedPurchase) {
       return res.status(403).json({
@@ -189,7 +120,7 @@ export const upsertProductReview = async (req, res) => {
     return res.status(200).json({
       message: "Review saved successfully",
       summary,
-      review: toReviewResponse(review),
+      review: serializeReview(review),
     });
   } catch (error) {
     console.error("Error saving review:", error);
