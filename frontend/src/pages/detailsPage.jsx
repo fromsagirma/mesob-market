@@ -7,6 +7,7 @@ import useCartStore from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
 import Skeleton from '../components/ui/Skeleton';
+import StarRating from '../components/Common/StarRating';
 const TechnicalDetail = ({ iconPath, label, value }) => (
   <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg border border-border transition-colors">
     <div className="shrink-0">
@@ -16,19 +17,6 @@ const TechnicalDetail = ({ iconPath, label, value }) => (
       <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">{label}</p>
       <p className="text-sm font-semibold text-foreground">{value}</p>
     </div>
-  </div>
-);
-
-
-
-// 2. Star Rating Component
-const StarRating = ({ rating = 5, size = "sm" }) => (
-  <div className="flex gap-0.5 text-yellow-400" aria-label={`${rating} out of 5 stars`}>
-    {[...Array(5)].map((_, i) => (
-      <span key={i} className={size === "lg" ? "text-2xl" : "text-xs"}>
-        {i < Math.floor(rating) ? "★" : "☆"}
-      </span>
-    ))}
   </div>
 );
 
