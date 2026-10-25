@@ -12,6 +12,7 @@ import useThemeStore from './store/themeStore'
 import { useProductStore } from './store/productStore'
 import useCartStore from './store/cartStore'
 import ErrorBoundary from './components/Common/ErrorBoundary'
+import OfflineBanner from './components/Common/OfflineBanner'
 
 import Home from './pages/home'
 import InstallPWAButton from './components/InstallPWAButton'
@@ -116,6 +117,7 @@ const App = () => {
 
   return (
     <ErrorBoundary>
+      <OfflineBanner />
       <ToastContainer />
       <UserChangePassword />
       <AppRoutes />
