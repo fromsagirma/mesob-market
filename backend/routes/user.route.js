@@ -11,14 +11,15 @@ import {
 } from "../controllers/user.controller.js";
 import { upload } from "../config/cloudinaryConfig.js";
 import { authenticate } from "../middleware/role.middleware.js";
+import { authRateLimiter, passwordResetRateLimiter } from "../middleware/rateLimiter.middleware.js";
 
 const router = express.Router();
 
-router.post("/register", upload.single('profilePic'), register);
-router.post("/login", login);
+router.post("/register", authRateLimiter, upload.single('profilePic'), register);
+router.post("/login", authRateLimiter, login);
 router.post("/refresh", refreshToken);
 router.post("/logout", logout);
-router.post("/password-reset/request", requestPasswordReset);
+router.post("/password-reset/request", passwordResetRateLimiter, requestPasswordReset);
 router.post("/password-reset/confirm", confirmPasswordReset);
 router.post("/change-password", authenticate, changePassword);
 router.get("/verify", verifyEmail);
