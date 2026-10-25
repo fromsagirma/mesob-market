@@ -1,0 +1,82 @@
+import mongoose from "mongoose";
+
+const productSchema = new mongoose.Schema({
+    name:{
+        type:String,
+        required: true,
+        trim: true
+    },
+    description:{
+        type:String,
+        required: true,
+        trim: true
+    },
+    price:{
+        type:Number,
+        required: true,
+    },
+    discount: {
+        type: Number,
+        min: 0,
+        max: 100,
+        default: 0,
+    },
+    status:{
+        type:String,
+        enum:["used","slightly used","new"],
+        default:"new"
+    },
+    category:{
+        type:String,
+        required: true,
+        enum: ["Electronics", "Fashion", "Home & Living", "Beauty & Personal Care", "Sports & Outdoor", "Books & Education"],
+        trim: true
+    },
+    madeIn: {
+        type: String,
+        trim: true,
+    },
+    material: {
+        type: String,
+        trim: true,
+    },
+    coverImage: {
+        type: String,
+        required: true,
+        trim: true,
+    },
+    detailImages: {
+        type: [String],
+        validate: {
+            validator: function (arr) {
+                return arr.length <= 3;
+            },
+            message: "detailImages can contain at most 3 images",
+        },
+        default: [],
+    },
+    stock:{
+        type:Number,
+        required: true,
+    },
+    averageRating: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5,
+    },
+    reviewCount: {
+        type: Number,
+        default: 0,
+        min: 0,
+    },
+    colors: {
+        type: [String],
+        default: [],
+    },
+
+},{timestamps:true});
+
+const Product = mongoose.model("Product",productSchema);
+export default Product;
+
