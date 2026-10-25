@@ -1,141 +1,13 @@
 import mongoose from "mongoose";
 import Product from "../models/product.model.js";
 import Review from "../models/review.model.js";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import Fuse from "fuse.js";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-const retryGeminiCall = async (generateContentFn, maxRetries = 2, perAttemptTimeoutMs = 15000) => {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const attemptPromise = generateContentFn();
-
-      const timeoutPromise = new Promise((_, reject) => {
-        const id = setTimeout(() => {
-          const toErr = new Error('Gemini request timed out');
-          toErr.isTimeout = true;
-          reject(toErr);
-        }, perAttemptTimeoutMs);
-
-        if (attemptPromise && typeof attemptPromise.then === 'function') {
-          attemptPromise.then(() => clearTimeout(id)).catch(() => clearTimeout(id));
-        }
-      });
-
-      return await Promise.race([attemptPromise, timeoutPromise]);
-    } catch (error) {
-      const msg = (error && (error.message || '')) || '';
-
-      if (error && error.isTimeout) {
-        if (attempt < maxRetries) {
-          console.log(`Gemini request timed out (attempt ${attempt}/${maxRetries}), retrying...`);
-          continue;
-        }
-
-        const rateError = new Error('Gemini timed out after retries');
-        rateError.isRateLimit = true;
-        rateError.retryAfterMs = perAttemptTimeoutMs;
-        rateError.permanentQuota = true; // trigger offline fallback
-        throw rateError;
-      }
-
-      const isRate = msg.includes('429') || msg.includes('Too Many Requests') || error?.code === 429;
-      if (isRate) {
-        let retryDelay = 21000;
-        const retryMsMatch = msg.match(/retryDelay["\s]*:\s*["']?(\d+)s?/i);
-        const retrySecMatch = msg.match(/Retry-After["\s]*[:=]?\s*["']?(\d+)/i);
-        if (retryMsMatch) retryDelay = parseInt(retryMsMatch[1], 10) * 1000;
-        else if (retrySecMatch) retryDelay = parseInt(retrySecMatch[1], 10) * 1000;
-
-        if (attempt < maxRetries) {
-          console.log(`Quota exceeded, retrying in ${retryDelay}ms (attempt ${attempt}/${maxRetries})`);
-          await new Promise((resolve) => setTimeout(resolve, retryDelay));
-          continue;
-        }
-
-        const rateError = new Error('Rate limit exceeded');
-        rateError.isRateLimit = true;
-        rateError.retryAfterMs = retryDelay;
-        rateError.permanentQuota = true; 
-        throw rateError;
-      }
-
-      throw error;
-    }
-  }
-};
-
-const fuzzySearchProducts = async (query, limit = 10) => {
-  try {
-    if (!query || typeof query !== 'string') return [];
-    const cleaned = String(query).replace(/[^a-z0-9\s]/gi, ' ').trim();
-    if (!cleaned) return [];
-
-    const words = cleaned.split(/\s+/).filter(Boolean);
-    if (words.length > 0) {
-      const andConditions = words.map((w) => ({
-        $or: [
-          { name: { $regex: w, $options: 'i' } },
-          { category: { $regex: w, $options: 'i' } },
-          { description: { $regex: w, $options: 'i' } },
-        ],
-      }));
-
-      const regexMatches = await Product.find({ $and: andConditions }).limit(Math.max(limit, 20)).lean();
-      if (regexMatches && regexMatches.length > 0) return regexMatches;
-    }
-
-    const candidates = await Product.find({}).sort({ averageRating: -1 }).limit(300).lean();
-    if (!candidates || candidates.length === 0) return [];
-
-    const fuse = new Fuse(candidates, {
-      keys: ['name', 'category', 'description'],
-      threshold: 0.35,
-      ignoreLocation: true,
-    });
-
-    const results = fuse.search(cleaned, { limit });
-    return results.map(r => r.item);
-  } catch (err) {
-    console.error('fuzzySearchProducts error:', err);
-    return [];
-  }
-};
-
-const withDiscountedPrice = (productDoc) => {
-  const product = productDoc.toObject ? productDoc.toObject() : productDoc;
-  const price = Number(product.price) || 0;
-  const discount = Number(product.discount) || 0;
-  const discountedPrice = Number((price - (price * discount) / 100).toFixed(2));
-  return { ...product, discountedPrice };
-};
-
-const mapProductsWithContext = (products = [], reviewMap = new Map()) => {
-  return products.map((product) => {
-    const reviews = reviewMap.get(String(product._id)) || [];
-    const stock = Number(product.stock) || 0;
-
-    let inventoryNote = "In stock";
-    if (stock <= 0) inventoryNote = "Currently sold out";
-    else if (stock <= 3) inventoryNote = `Only ${stock} left`;
-
-    return {
-      _id: product._id,
-      name: product.name,
-      category: product.category,
-      coverImage: product.coverImage,
-      status: product.status,
-      price: product.price,
-      discountedPrice: product.discountedPrice,
-      averageRating: Number(product.averageRating || 0),
-      reviewCount: Number(product.reviewCount || 0),
-      stock,
-      inventoryNote,
-      reviews: reviews.slice(0, 3).map(r => ({ title: r.title, comment: r.comment, rating: r.rating })) // Include top reviews for LLM context
-    };
-  });
-};
+import {
+  getGeminiClient,
+  retryGeminiCall,
+  fuzzySearchProducts,
+  mapProductsWithContext
+} from "../services/rag.service.js";
+import { withDiscountedPrice } from "../services/product.service.js";
 
 export const ragChat = async (req, res) => {
   try {
@@ -143,6 +15,18 @@ export const ragChat = async (req, res) => {
 
     if (!message || typeof message !== "string" || !message.trim()) {
       return res.status(400).json({ message: "Message is required" });
+    }
+
+    const genAI = getGeminiClient();
+    if (!genAI) {
+      const fallbackItems = await fuzzySearchProducts(message, limit);
+      const enriched = mapProductsWithContext(fallbackItems.map(withDiscountedPrice));
+      return res.status(200).json({
+        reply: "Here are the top matching products from our catalog:",
+        products: enriched,
+        intent: "discovery",
+        mode: "offline_fallback"
+      });
     }
 
     const intentModel = genAI.getGenerativeModel({
