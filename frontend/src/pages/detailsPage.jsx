@@ -6,6 +6,7 @@ import AICurator from '../components/AICurator';
 import useCartStore from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
+import Skeleton from '../components/ui/Skeleton';
 const TechnicalDetail = ({ iconPath, label, value }) => (
   <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg border border-border transition-colors">
     <div className="shrink-0">
@@ -89,7 +90,30 @@ const ProductDetail = ({ onCategoryLoad }) => {
   };
 
   if (loading) {
-    return <div className="max-w-7xl mx-auto p-12 text-center py-20 text-muted-foreground animate-pulse">Loading Premium Details...</div>;
+    return (
+      <div className="max-w-7xl mx-auto p-6 lg:p-12 font-sans">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="space-y-4">
+            <Skeleton className="aspect-[6/7] w-full rounded-3xl" />
+            <div className="grid grid-cols-5 gap-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="aspect-square rounded-xl" />
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-col space-y-6">
+            <Skeleton className="w-1/3 h-5 rounded-md" />
+            <Skeleton className="w-3/4 h-10 rounded-lg" />
+            <Skeleton className="w-1/4 h-8 rounded-md" />
+            <Skeleton className="w-full h-24 rounded-xl" />
+            <div className="pt-6 border-t border-border space-y-4">
+              <Skeleton className="w-full h-14 rounded-2xl" />
+              <Skeleton className="w-full h-14 rounded-2xl" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (error || !product) {

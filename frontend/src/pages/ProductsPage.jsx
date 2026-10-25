@@ -1,23 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
+import ProductCardSkeleton from '../components/ProductCardSkeleton';
 import Sidebar from '../components/Sidebar';
 import Pagination from '../components/Pagination';
 import AICurator from '../components/AICurator';
 import { useProductStore } from '../store/productStore';
 import { useToastStore } from '../store/toastStore';
 import { useAuthStore } from '../store/authStore';
-
-const SkeletonCard = () => (
-  <div className="flex flex-col w-full animate-pulse">
-    <div className="w-full aspect-[4/5] bg-muted rounded-[1.5rem]" />
-    <div className="pt-6 space-y-2">
-      <div className="h-4 w-1/4 bg-muted rounded-full" />
-      <div className="h-5 w-3/4 bg-muted rounded" />
-      <div className="h-4 w-1/3 bg-muted rounded" />
-    </div>
-  </div>
-);
 
 const ProductsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -175,7 +165,7 @@ const ProductsPage = () => {
               className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10 transition-opacity duration-200"
             >
               {showSkeletons ? (
-                Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)
+                Array.from({ length: 12 }).map((_, i) => <ProductCardSkeleton key={i} />)
               ) : error ? (
                 <div className="col-span-full py-20 text-center">
                   <div className="bg-destructive/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
