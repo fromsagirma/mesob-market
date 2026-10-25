@@ -1,5 +1,4 @@
 import crypto from 'crypto';
-import Cart from '../models/cart.model.js';
 
 /**
  * Chapa payment gateway integration and transaction resolution service.
@@ -44,9 +43,10 @@ export const verifyWebhookSignature = (body, signature, secretKey) => {
   return hash === signature;
 };
 
-export const clearUserCartAfterPayment = async (userId) => {
+export const clearUserCartAfterPayment = async (userId, cartModel = null) => {
   if (!userId) return null;
-  return Cart.findOneAndUpdate(
+  const Model = cartModel || (await import('../models/cart.model.js')).default;
+  return Model.findOneAndUpdate(
     { user: userId },
     { items: [], totalPrice: 0 },
     { new: true }
