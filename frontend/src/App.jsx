@@ -38,6 +38,7 @@ import { useModalStore } from './store/modalStore'
 import AdminLayout from './components/Admin/AdminLayout'
 import CommunityPage from './pages/CommunityPage'
 import NotFoundPage from './pages/NotFoundPage'
+import SkipToContent from './components/Common/SkipToContent'
 
 
 function AppRoutes() {
@@ -47,6 +48,7 @@ function AppRoutes() {
 
   return (
     <>
+      <SkipToContent />
       <InstallPWAButton />
       {!hideMainChrome && <NavBar />}
       <Routes>
