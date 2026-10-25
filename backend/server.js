@@ -4,6 +4,8 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 
 import cors from 'cors';
+import corsOptions from './config/cors.js';
+import sanitizeMiddleware from './middleware/sanitize.middleware.js';
 import userRoutes from "./routes/user.route.js";
 import productRoutes from "./routes/product.route.js";
 import productAdminRoutes from "./routes/admin/product.route.js";
@@ -20,8 +22,6 @@ import financeAdminRoutes from "./routes/admin/finance.route.js";
 import ragRoutes from "./routes/rag.route.js";
 import communityRoutes from "./routes/communityPost.route.js";
 
-
-
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
 import path from 'path';
@@ -32,8 +32,6 @@ const __dirname = path.dirname(__filename);
 
 const swaggerDocument = YAML.load(path.join(__dirname, "docs", "swagger.yaml"));
 
-
-
 const app = express();
 
 const PORT = process.env.PORT || 3000;
@@ -42,14 +40,13 @@ app.set('etag', false);
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(sanitizeMiddleware);
 
 // Request logger for debugging
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   next();
 });
-
-import corsOptions from './config/cors.js';
 
 app.use(cors(corsOptions));
 
