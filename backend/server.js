@@ -49,24 +49,9 @@ app.use((req, res, next) => {
   next();
 });
 
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  'http://localhost:5173',
-  'https://e-commerce-olive-delta.vercel.app'
-].filter(Boolean);
+import corsOptions from './config/cors.js';
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-
-      return callback(null, true); 
-    }
-    return callback(null, true);
-  },
-  credentials: true 
-}));
+app.use(cors(corsOptions));
 
 app.use('/api', (req, res, next) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
