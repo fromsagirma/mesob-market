@@ -9,7 +9,7 @@
     "dev": "nodemon server.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Firomsa Girma Worku <firomsagirma@astu.edu.et>",
   "license": "ISC",
   "description": "",
   "dependencies": {

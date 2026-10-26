@@ -190,6 +190,20 @@ docker compose -f docker-compose.dev.yml up --build
 
 ---
 
+## 👤 Author & Maintainer
+
+- **Developer:** **Firomsa Girma Worku**
+- **Student ID:** `CTC-2559-26`
+- **Institution:** Adama Science and Technology University (ASTU)
+- **Role:** Lead Developer, Architect, and Project Maintainer
+- **Email:** [firomsagirma@astu.edu.et](mailto:firomsagirma@astu.edu.et)
+- **GitHub:** [@fromsagirma](https://github.com/fromsagirma)
+
+### Authorship & Implementation Statement
+Mesob Market was designed, architected, and independently implemented by **Firomsa Girma Worku** as a full-stack e-commerce capstone application. The project encompasses full-stack system architecture, clean service boundaries, Ethiopian payment processing (Chapa), an AI shopping curator (Google Gemini RAG), comprehensive automated testing suites (122 tests), and containerized deployment workflows. Modern AI pair-programming tools (Google Antigravity / Gemini) were utilized for test suite expansion, static auditing, and documentation structuring.
+
+---
+
 ## 🛡️ Security & Publishing Notes
 - Sensitive credentials must strictly remain in `.env` and must never be committed to source control.
 - Ensure production database connections enforce strict TLS certificate validation.

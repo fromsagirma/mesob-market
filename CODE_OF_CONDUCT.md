@@ -20,4 +20,4 @@ Community leaders are responsible for clarifying and enforcing our standards of 
 This Code of Conduct applies within all community spaces, and also applies when an individual is officially representing the community in public spaces.
 
 ## Contact
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the project maintainers at firomsagirma@astu.edu.et. All complaints will be reviewed and investigated promptly and fairly.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the project maintainer, **Firomsa Girma Worku**, at firomsagirma@astu.edu.et. All complaints will be reviewed and investigated promptly and fairly.
