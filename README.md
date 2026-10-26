@@ -184,6 +184,12 @@ docker compose -f docker-compose.dev.yml up --build
 
 ---
 
+## 📜 Repository History & Provenance
+
+> **Transparency Note:** The Git history of this repository was curated and reconstructed from a complete project source snapshot into structured milestone commits and feature branches (`develop`, `feature/*`, `main`). It reflects the platform's architectural layers, security hardening, service boundaries, automated test suites, containerization, and release workflow, rather than representing an original day-by-day development timeline.
+
+---
+
 ## 🛡️ Security & Publishing Notes
 - Sensitive credentials must strictly remain in `.env` and must never be committed to source control.
 - Ensure production database connections enforce strict TLS certificate validation.
