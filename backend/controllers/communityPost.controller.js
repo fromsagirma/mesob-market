@@ -1,15 +1,17 @@
 import CommunityPost from "../models/communityPost.model.js";
-import User from "../models/user.model.js";
+import {
+    togglePostLike,
+    recordPostRepost,
+    addPostComment,
+    processPostReport
+} from "../services/community.service.js";
 
 export const createPost = async (req, res) => {
     try {
-        console.log("Create Post Request received:", req.body);
         const { title, content, type } = req.body;
         const userId = req.user._id;
-        console.log("Creating post for user:", userId);
 
         if (req.user.isBanned) {
-            console.log("Banned user attempted to post:", userId);
             return res.status(403).json({ message: "Your account is banned and cannot post." });
         }
 
@@ -20,10 +22,7 @@ export const createPost = async (req, res) => {
             type
         });
 
-
         await newPost.save();
-        console.log("Post saved successfully:", newPost._id);
-        
         const populatedPost = await CommunityPost.findById(newPost._id).populate("user", "name email profilePic");
         
         res.status(201).json(populatedPost);
@@ -32,7 +31,6 @@ export const createPost = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
 
 export const getPosts = async (req, res) => {
     try {
@@ -51,20 +49,11 @@ export const likePost = async (req, res) => {
         const { id } = req.params;
         const userId = req.user._id;
 
-        const post = await CommunityPost.findById(id);
-        if (!post) return res.status(404).json({ message: "Post not found" });
-
-        const index = post.likes.indexOf(userId);
-        if (index === -1) {
-            post.likes.push(userId);
-        } else {
-            post.likes.splice(index, 1);
-        }
-
-        await post.save();
-        res.status(200).json(post);
+        const updatedPost = await togglePostLike(id, userId);
+        res.status(200).json(updatedPost);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        const status = error.message === 'Post not found' ? 404 : 500;
+        res.status(status).json({ message: error.message });
     }
 };
 
@@ -73,17 +62,11 @@ export const repostPost = async (req, res) => {
         const { id } = req.params;
         const userId = req.user._id;
 
-        const post = await CommunityPost.findById(id);
-        if (!post) return res.status(404).json({ message: "Post not found" });
-
-        if (!post.reposts.includes(userId)) {
-            post.reposts.push(userId);
-            await post.save();
-        }
-
-        res.status(200).json(post);
+        const updatedPost = await recordPostRepost(id, userId);
+        res.status(200).json(updatedPost);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        const status = error.message === 'Post not found' ? 404 : 500;
+        res.status(status).json({ message: error.message });
     }
 };
 
@@ -93,23 +76,11 @@ export const commentPost = async (req, res) => {
         const { content } = req.body;
         const userId = req.user._id;
 
-        const post = await CommunityPost.findById(id);
-        if (!post) return res.status(404).json({ message: "Post not found" });
-
-        post.comments.push({
-            user: userId,
-            content
-        });
-
-        await post.save();
-        
-        const updatedPost = await CommunityPost.findById(id)
-            .populate("user", "name email profilePic")
-            .populate("comments.user", "name profilePic");
-
+        const updatedPost = await addPostComment(id, userId, content);
         res.status(200).json(updatedPost);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        const status = error.message === 'Post not found' ? 404 : 400;
+        res.status(status).json({ message: error.message });
     }
 };
 
@@ -118,28 +89,10 @@ export const reportPost = async (req, res) => {
         const { id } = req.params;
         const userId = req.user._id;
 
-        const post = await CommunityPost.findById(id).populate("user");
-        if (!post) return res.status(404).json({ message: "Post not found" });
-
-        if (post.reports.includes(userId)) {
-            return res.status(400).json({ message: "You have already reported this post" });
-        }
-
-        post.reports.push(userId);
-        await post.save();
-
-        // Handle user reporting logic
-        const targetUser = await User.findById(post.user._id);
-        if (targetUser) {
-            targetUser.reportCount += 1;
-            if (targetUser.reportCount >= 5) {
-                targetUser.isBanned = true;
-            }
-            await targetUser.save();
-        }
-
+        await processPostReport(id, userId);
         res.status(200).json({ message: "Post reported successfully" });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        const status = error.statusCode || (error.message === 'Post not found' ? 404 : 500);
+        res.status(status).json({ message: error.message });
     }
 };

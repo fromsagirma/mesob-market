@@ -1,8 +1,8 @@
 openapi: 3.0.0
 info:
-  title: E-Commerce API
+  title: Mesob Market API
   version: 1.0.0
-  description: Authentication and Admin Product APIs
+  description: Enterprise REST API documentation for Mesob Market Ethiopian E-Commerce Platform.
 
 servers:
   - url: http://localhost:3000
@@ -163,6 +163,37 @@ components:
             type: string
 
 paths:
+
+  /api/health:
+    get:
+      tags: [System]
+      summary: Service Health & Readiness Check
+      description: Returns service liveness, MongoDB connection state, uptime, and memory statistics.
+      responses:
+        "200":
+          description: Service and database are healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  uptimeSeconds:
+                    type: integer
+                    example: 3600
+                  database:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        example: "connected"
+                      healthy:
+                        type: boolean
+                        example: true
+        "503":
+          description: Service is degraded or database is disconnected
 
   /api/auth/register:
     post:

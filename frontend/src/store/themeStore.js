@@ -1,25 +1,38 @@
 import { create } from 'zustand';
+import {
+  THEME_STORAGE_KEY,
+  THEMES,
+  isValidTheme,
+  getNextTheme,
+  resolveInitialTheme,
+  applyThemeToDocument
+} from '../lib/theme.js';
 
-const useThemeStore = create((set) => ({
-    theme: localStorage.getItem('theme') || 'light',
-    setTheme: (theme) => {
-        localStorage.setItem('theme', theme);
-        set({ theme });
-        if (theme === 'dark') {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-    },
-    initTheme: () => {
-        const theme = localStorage.getItem('theme') || 'light';
-        if (theme === 'dark') {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-        set({ theme });
+const useThemeStore = create((set, get) => ({
+  theme: resolveInitialTheme(),
+
+  setTheme: (theme) => {
+    const validTheme = isValidTheme(theme) ? theme : THEMES.LIGHT;
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, validTheme);
+    } catch {
+      // ignore storage failure
     }
+    applyThemeToDocument(validTheme);
+    set({ theme: validTheme });
+  },
+
+  toggleTheme: () => {
+    const current = get().theme;
+    const next = getNextTheme(current);
+    get().setTheme(next);
+  },
+
+  initTheme: () => {
+    const theme = resolveInitialTheme();
+    applyThemeToDocument(theme);
+    set({ theme });
+  }
 }));
 
 export default useThemeStore;

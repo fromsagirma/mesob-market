@@ -1,0 +1,48 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+
+jobs:
+  test:
+    name: Test & Lint Backend
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: backend/package.json
+
+      - name: Install dependencies
+        run: npm install --prefer-offline --no-audit
+
+      - name: Run backend unit and integration test suite
+        run: npm test
+        env:
+          NODE_ENV: test
+          PORT: 5001
+          JWT_SECRET: test_jwt_secret_key_32_characters_long_min
+          JWT_REFRESH_SECRET: test_jwt_refresh_secret_32_chars_long
+          CHAPA_SECRET_KEY: CHASECK_TEST-dummy-test-key

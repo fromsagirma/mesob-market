@@ -2,117 +2,19 @@ import asyncHandler from "express-async-handler";
 import Order from "../../models/order.model.js";
 import Transaction from "../../models/transaction.model.js";
 import axios from "axios";
-
-const SUCCESS_PAYMENT_STATUSES = new Set(["success", "successful", "paid", "completed", "complete"]);
-const FAILED_PAYMENT_STATUSES = new Set(["failed", "cancelled", "canceled", "error", "expired"]);
-const STALE_PENDING_MINUTES = Number(process.env.FINANCE_PENDING_FAIL_AFTER_MINUTES ?? 0);
-
-const normalizeStatus = (value) => String(value || "").trim().toLowerCase();
-
-const parseMonetaryValue = (value) => {
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? value : 0;
-  }
-
-  if (typeof value === "string") {
-    const normalized = value.replace(/[^0-9.-]/g, "");
-    const parsed = Number(normalized);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
+import { parseMonetaryValue } from "../../services/payment.service.js";
+import {
+  SUCCESS_PAYMENT_STATUSES,
+  FAILED_PAYMENT_STATUSES,
+  normalizeStatus,
+  normalizeFinanceStatus,
+  resolveTransactionDate,
+  resolveTransactionAmount,
+  extractChapaTransactions,
+  normalizeChapaTransaction
+} from "../../services/finance.service.js";
 
 const isSuccessfulStatus = (value) => SUCCESS_PAYMENT_STATUSES.has(normalizeStatus(value));
-
-const isStalePending = (createdAt) => {
-  const date = new Date(createdAt);
-  if (Number.isNaN(date.getTime())) return true;
-
-  const ageMs = Date.now() - date.getTime();
-  return ageMs >= STALE_PENDING_MINUTES * 60 * 1000;
-};
-
-const normalizeFinanceStatus = (status, createdAt) => {
-  const normalized = normalizeStatus(status);
-
-  if (SUCCESS_PAYMENT_STATUSES.has(normalized)) return "success";
-  if (FAILED_PAYMENT_STATUSES.has(normalized)) return "failed";
-
-  if (normalized === "pending") {
-    return isStalePending(createdAt) ? "failed" : "pending";
-  }
-
-  return "failed";
-};
-
-const resolveTransactionDate = (transaction) => {
-  return (
-    transaction?.createdAt ||
-    transaction?.created_at ||
-    transaction?.updatedAt ||
-    transaction?.updated_at ||
-    transaction?.date ||
-    null
-  );
-};
-
-const resolveTransactionAmount = (transaction) => {
-  const amount = parseMonetaryValue(
-    transaction?.amount ??
-      transaction?.total_amount ??
-      transaction?.paid_amount ??
-      transaction?.charged_amount
-  );
-
-  if (amount > 0) return amount;
-
-  const fallbackAmount = parseMonetaryValue(transaction?.orderId?.totalPrice);
-  return fallbackAmount;
-};
-
-const extractChapaTransactions = (payload) => {
-  if (Array.isArray(payload?.data?.data)) return payload.data.data;
-  if (Array.isArray(payload?.data?.transactions)) return payload.data.transactions;
-  if (Array.isArray(payload?.data)) return payload.data;
-  if (Array.isArray(payload?.transactions)) return payload.transactions;
-  return [];
-};
-
-const normalizeChapaTransaction = (transaction = {}, index = 0) => {
-  const txRef =
-    transaction?.tx_ref ||
-    transaction?.reference ||
-    transaction?.ref_id ||
-    transaction?.id ||
-    `chapa-${index}`;
-
-  const resolvedStatus = normalizeStatus(
-    transaction?.status || transaction?.payment_status || transaction?.transaction_status
-  );
-  const transactionDate = resolveTransactionDate(transaction);
-
-  const firstName = transaction?.first_name || transaction?.customer?.first_name || "";
-  const lastName = transaction?.last_name || transaction?.customer?.last_name || "";
-  const customerName = `${firstName} ${lastName}`.trim();
-  const customerEmail = transaction?.email || transaction?.customer?.email || "";
-
-  return {
-    _id: String(transaction?.id || txRef),
-    tx_ref: String(txRef),
-    amount: resolveTransactionAmount(transaction),
-    currency: String(transaction?.currency || "ETB").toUpperCase(),
-    status: normalizeFinanceStatus(resolvedStatus, transactionDate),
-    chapa_reference: transaction?.reference || transaction?.chapa_reference || null,
-    createdAt: transactionDate,
-    userId: {
-      _id: String(transaction?.customer?.id || customerEmail || txRef),
-      name: customerName || customerEmail || "Chapa Customer",
-    },
-    source: "chapa",
-  };
-};
 
 const toChapaDateParam = (value) => {
   if (!value) return undefined;

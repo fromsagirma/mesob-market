@@ -4,6 +4,7 @@ import { ShoppingCart, Star, Plus } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import useCartStore from '../store/cartStore';
 import { useToastStore } from '../store/toastStore';
+import { formatETB } from '../lib/currency';
 
 const StarRating = ({ rating = 5 }) => (
   <div className="flex items-center gap-1">
@@ -96,7 +97,7 @@ const ProductCard = ({ id, image, title, price, status, rating }) => {
             {title}
           </h3>
           <p className="text-base font-bold text-primary">
-            ETB {price?.toFixed(2)}
+            {formatETB(price)}
           </p>
         </div>
 

@@ -2,13 +2,11 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { apiRequest } from "../lib/apiClient";
 
-const initialState = {
-  user: null,
-  accessToken: null,
-  refreshToken: null,
-  loading: false,
-  error: null,
-};
+import {
+  AUTH_STORAGE_KEY,
+  initialAuthState as initialState,
+  extractPersistedAuthState
+} from "../lib/authSession.js";
 
 export const useAuthStore = create(
   persist(
@@ -142,12 +140,8 @@ export const useAuthStore = create(
       clearError: () => set({ error: null }),
     }),
     {
-      name: "auth-storage",
-      partialize: (state) => ({
-        user: state.user,
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
-      }),
+      name: AUTH_STORAGE_KEY,
+      partialize: extractPersistedAuthState,
     }
   )
 );

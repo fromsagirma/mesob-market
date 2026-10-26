@@ -11,8 +11,9 @@ const name = process.argv[4] || 'Copilot Test';
 
 const run = async () => {
   try {
-    const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/csec-project';
-    await mongoose.connect(uri, { tls: true, tlsInsecure: true });
+    const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/mesob_market';
+    const opts = uri.includes('mongodb+srv') ? { tls: true } : {};
+    await mongoose.connect(uri, opts);
     console.log('Connected to MongoDB for creating test user');
 
     const normalized = String(email).toLowerCase().trim();

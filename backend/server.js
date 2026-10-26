@@ -4,6 +4,10 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 
 import cors from 'cors';
+import corsOptions from './config/cors.js';
+import sanitizeMiddleware from './middleware/sanitize.middleware.js';
+import requestIdMiddleware from './middleware/requestId.middleware.js';
+import { hppProtection, securityHeaders } from './middleware/security.middleware.js';
 import userRoutes from "./routes/user.route.js";
 import productRoutes from "./routes/product.route.js";
 import productAdminRoutes from "./routes/admin/product.route.js";
@@ -19,8 +23,7 @@ import dashboardAdminRoutes from "./routes/admin/dashboard.route.js";
 import financeAdminRoutes from "./routes/admin/finance.route.js";
 import ragRoutes from "./routes/rag.route.js";
 import communityRoutes from "./routes/communityPost.route.js";
-
-
+import healthRoutes from "./routes/health.route.js";
 
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
@@ -32,16 +35,19 @@ const __dirname = path.dirname(__filename);
 
 const swaggerDocument = YAML.load(path.join(__dirname, "docs", "swagger.yaml"));
 
-
-
 const app = express();
 
 const PORT = process.env.PORT || 3000;
 
 app.set('etag', false);
 
-app.use(express.json());
+app.use(securityHeaders);
+app.use(requestIdMiddleware);
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+app.use(hppProtection);
+app.use(sanitizeMiddleware);
 
 // Request logger for debugging
 app.use((req, res, next) => {
@@ -49,24 +55,7 @@ app.use((req, res, next) => {
   next();
 });
 
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  'http://localhost:5173',
-  'https://e-commerce-olive-delta.vercel.app'
-].filter(Boolean);
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-
-      return callback(null, true); 
-    }
-    return callback(null, true);
-  },
-  credentials: true 
-}));
+app.use(cors(corsOptions));
 
 app.use('/api', (req, res, next) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -92,6 +81,7 @@ app.use("/api/admin/dashboard", dashboardAdminRoutes);
 app.use("/api/admin/finance", financeAdminRoutes);
 app.use("/api/rag", ragRoutes);
 app.use("/api/community", communityRoutes);
+app.use("/api/health", healthRoutes);
 
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));

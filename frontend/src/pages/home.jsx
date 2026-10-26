@@ -10,6 +10,7 @@ import { useAuthStore } from "../store/authStore";
 import { useToastStore } from "../store/toastStore";
 import { useProductStore } from "../store/productStore";
 import { ShoppingCart, Star, Sparkles, X } from "lucide-react";
+import useDocumentTitle from "../hooks/useDocumentTitle";
 
 const HomeProductCard = ({ product }) => {
   const { user } = useAuthStore();
@@ -131,6 +132,7 @@ function ErrorState({ message, onRetry }) {
 }
 
 export default function Home() {
+  useDocumentTitle('Home — Authentic Ethiopian Marketplace');
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = React.useState("");
   const { latestProducts, loading, error, fetchLatestProducts, clearError } = useProductStore();

@@ -11,6 +11,8 @@ import ToastContainer from './components/Common/ToastContainer'
 import useThemeStore from './store/themeStore'
 import { useProductStore } from './store/productStore'
 import useCartStore from './store/cartStore'
+import ErrorBoundary from './components/Common/ErrorBoundary'
+import OfflineBanner from './components/Common/OfflineBanner'
 
 import Home from './pages/home'
 import InstallPWAButton from './components/InstallPWAButton'
@@ -36,6 +38,8 @@ import UserChangePassword from './components/UserChangePassword'
 import { useModalStore } from './store/modalStore'
 import AdminLayout from './components/Admin/AdminLayout'
 import CommunityPage from './pages/CommunityPage'
+import NotFoundPage from './pages/NotFoundPage'
+import SkipToContent from './components/Common/SkipToContent'
 
 
 function AppRoutes() {
@@ -45,6 +49,7 @@ function AppRoutes() {
 
   return (
     <>
+      <SkipToContent />
       <InstallPWAButton />
       {!hideMainChrome && <NavBar />}
       <Routes>
@@ -77,6 +82,7 @@ function AppRoutes() {
           <Route path="edit-product/:id" element={<AddProduct />} />
           <Route path="product-preview" element={<ProductPreview />} />
         </Route>
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       {!hideMainChrome && <Footer />}
       {!hideMainChrome && <BottomNav />}
@@ -110,13 +116,13 @@ const App = () => {
   }, [])
 
   return (
-
-    <>
+    <ErrorBoundary>
+      <OfflineBanner />
       <ToastContainer />
       <UserChangePassword />
       <AppRoutes />
       <Toaster position="bottom-right" reverseOrder={false} />
-    </>
+    </ErrorBoundary>
   )
 
 }
