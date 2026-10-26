@@ -12,6 +12,7 @@ We release security patches and updates for active releases:
 We take the security of **Mesob Market** seriously. If you discover a security vulnerability or potential exploit, please do **NOT** open a public issue.
 
 Instead, please report it privately:
+- **Maintainer**: Firomsa Girma Worku
 - **Email**: firomsagirma@astu.edu.et
 - **Subject**: `[SECURITY VULNERABILITY] Mesob Market - <Brief Description>`
 
