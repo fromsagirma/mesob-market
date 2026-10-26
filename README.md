@@ -4,6 +4,15 @@ Mesob Market is a full-featured e-commerce platform built with React 19, Express
 
 ---
 
+## Author
+
+**Name:** Firomsa Girma Worku  
+**Student ID:** CTC-2559-26
+
+**Project:** Mesob Market — Full-Stack E-Commerce Platform
+
+
+
 ## 🌟 Key Features
 
 ### Customer Shopping Experience
